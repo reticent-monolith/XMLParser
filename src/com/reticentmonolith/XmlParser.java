@@ -11,8 +11,16 @@ import java.util.ArrayList;
 
 public class XmlParser {
     Stack<XmlObject> processing = new Stack<>();
-    Pattern PATTERN = Pattern.compile("(?<opener><[^?>/]+>)|(?<text>>\\w*<)|(?<closer></[^>]+>)|" +
+    Pattern HIERARCHY_PATTERN = Pattern.compile(
+            "<(?<opener>[^?>/]+)>|" +
+            "(?<closer></[^>]+>)|" +
             "(?<selfclosing><[^?>/]+\s?/>)");
+    Pattern ATTRIBUTE_PATTERN = Pattern.compile(
+            "\s+(?<attribute>[a-zA-Z0-9]+=\"[a-zA-Z0-9]+\")\s?|"
+    );
+    Pattern TEXT_PATTERN = Pattern.compile(
+            "(?<text>>\\w*<)|"
+    );
 
     public XmlObject parse(File file) throws FileNotFoundException {
         // Add lines from xml file to array
@@ -24,13 +32,12 @@ public class XmlParser {
 
         // find tags and create hierarchy
         lines.forEach(line -> {
-            Matcher tag = PATTERN.matcher(line);
+            Matcher tag = HIERARCHY_PATTERN.matcher(line);
             while (tag.find()) {
                 XmlObject obj = new XmlObject();
                 String opener = tag.group("opener");
                 String closer = tag.group("closer");
                 String selfCloser = tag.group("selfclosing");
-                String text = tag.group("text");
 
                 if (opener != null) {
                     obj.setHeader(opener);
