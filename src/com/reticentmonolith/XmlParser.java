@@ -41,7 +41,7 @@ public class XmlParser {
                 } else if (selfCloser != null) {
                     addHeaderAndAttributes(selfCloser, obj);
                     processing.peek().addChild(obj);
-                } else if (closer != null && processing.size() != 1) {
+                } else if (closer != null && processing.size() > 1) {
                     XmlObject closed = processing.pop();
                     processing.peek().addChild(closed);
                 }
@@ -63,11 +63,12 @@ public class XmlParser {
         }
         StringBuilder headerBuilder = new StringBuilder(tag);
         int spaceIndex = tag.indexOf(" ");
+        if (spaceIndex < 0) spaceIndex = tag.length();
         obj.setHeader(headerBuilder.substring(0, spaceIndex));
     }
     private void setText(String line, XmlObject obj) {
         Matcher textMatcher = Pattern.compile(
-                "<(?<header>[^?>/]+)\s.*>(?<text>[^<]+)<"
+                "<(?<header>[^?>/]+)\s?.?>(?<text>[^<]+)<"
         ).matcher(line);
         while (textMatcher.find()) {
             String text = textMatcher.group("text");

@@ -7,7 +7,7 @@ public class Main {
     public static String RESET = "\u001b[0m";
     public static String RED = "\u001b[31m";
     public static void main(String[] args) {
-        File file = new File("res/basic.xml");
+        File file = new File("res/plants.xml");
         XmlParser parser = new XmlParser();
         XmlObject result = new XmlObject();
         try {
