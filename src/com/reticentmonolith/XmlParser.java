@@ -8,10 +8,8 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.ArrayList;
 
-
 public class XmlParser {
     Stack<XmlObject> processing = new Stack<>();
-
     public XmlObject parse(File file) throws FileNotFoundException {
         // Add lines from xml file to array
         Scanner input = new Scanner(file);
@@ -49,7 +47,6 @@ public class XmlParser {
         });
         return processing.pop();
     }
-
     private void addHeaderAndAttributes(String tag, XmlObject obj) {
         Pattern ATTRIBUTE_PATTERN = Pattern.compile(
                 "\s+(?<attribute>[a-zA-Z0-9]+=\"[a-zA-Z0-9]+\")\s?|"
