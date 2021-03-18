@@ -11,16 +11,6 @@ import java.util.ArrayList;
 
 public class XmlParser {
     Stack<XmlObject> processing = new Stack<>();
-    Pattern HIERARCHY_PATTERN = Pattern.compile(
-            "<(?<opener>[^?>/]+)>|" +
-            "(?<closer></[^>]+>)|" +
-            "(?<selfclosing><[^?>/]+\s?/>)");
-    Pattern ATTRIBUTE_PATTERN = Pattern.compile(
-            "\s+(?<attribute>[a-zA-Z0-9]+=\"[a-zA-Z0-9]+\")\s?|"
-    );
-    Pattern TEXT_PATTERN = Pattern.compile(
-            "(?<text>>\\w*<)|"
-    );
 
     public XmlObject parse(File file) throws FileNotFoundException {
         // Add lines from xml file to array
@@ -31,6 +21,11 @@ public class XmlParser {
         }
 
         // find tags and create hierarchy
+        Pattern HIERARCHY_PATTERN = Pattern.compile(
+                "<(?<opener>[^?>/]+)>|" +
+                "(?<closer></[^>]+>)|" +
+                "<(?<selfclosing>[^?>/]+\s?/>)|"
+        );
         lines.forEach(line -> {
             Matcher tag = HIERARCHY_PATTERN.matcher(line);
             while (tag.find()) {
@@ -40,10 +35,11 @@ public class XmlParser {
                 String selfCloser = tag.group("selfclosing");
 
                 if (opener != null) {
-                    obj.setHeader(opener);
+                    addHeaderAndAttributes(opener, obj);
+                    setText(line, obj);
                     processing.push(obj);
                 } else if (selfCloser != null) {
-                    obj.setHeader(selfCloser);
+                    addHeaderAndAttributes(selfCloser, obj);
                     processing.peek().addChild(obj);
                 } else if (closer != null && processing.size() != 1) {
                     XmlObject closed = processing.pop();
@@ -52,5 +48,32 @@ public class XmlParser {
             }
         });
         return processing.pop();
+    }
+
+    private void addHeaderAndAttributes(String tag, XmlObject obj) {
+        Pattern ATTRIBUTE_PATTERN = Pattern.compile(
+                "\s+(?<attribute>[a-zA-Z0-9]+=\"[a-zA-Z0-9]+\")\s?|"
+        );
+        Matcher attributeMatcher = ATTRIBUTE_PATTERN.matcher(tag);
+        while (attributeMatcher.find()) {
+            String attribute = attributeMatcher.group("attribute");
+            if (attribute != null) {
+                obj.addAttribute(attribute);
+            }
+        }
+        StringBuilder headerBuilder = new StringBuilder(tag);
+        int spaceIndex = tag.indexOf(" ");
+        obj.setHeader(headerBuilder.substring(0, spaceIndex));
+    }
+    private void setText(String line, XmlObject obj) {
+        Matcher textMatcher = Pattern.compile(
+                "<(?<header>[^?>/]+)\s.*>(?<text>[^<]+)<"
+        ).matcher(line);
+        while (textMatcher.find()) {
+            String text = textMatcher.group("text");
+            if (text != null) {
+                obj.setText(text);
+            }
+        }
     }
 }

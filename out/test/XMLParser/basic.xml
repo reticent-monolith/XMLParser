@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
-<root derp="herp">
+<root surname="jones">
+    <parent name="anon">Long lost brother lol</parent>
     <parent name="helen">
         <child name="ben">
-            <subchild name="daisy"/>
+            <subchild name="daisy">I am a small child</subchild>
         </child>
         <child name="aaron"/>
     </parent>
