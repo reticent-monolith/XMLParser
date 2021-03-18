@@ -32,8 +32,6 @@ public class XmlParser {
                 String selfCloser = tag.group("selfclosing");
                 String text = tag.group("text");
 
-                System.out.println(opener + text);
-
                 if (opener != null) {
                     obj.setHeader(opener);
                     processing.push(obj);

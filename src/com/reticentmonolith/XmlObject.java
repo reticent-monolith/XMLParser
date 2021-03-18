@@ -9,6 +9,10 @@ public class XmlObject {
     private ArrayList<XmlObject> children = new ArrayList<>();
     private String text = "";
 
+    String RESET = "\u001b[0m";
+    String RED = "\u001b[31m";
+
+
     /* Getters and setters */
     public void setHeader(String header) {
         this.header = header;
@@ -24,6 +28,17 @@ public class XmlObject {
 
     public void addChild(XmlObject child) {
         this.children.add(child);
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer output = new StringBuffer();
+        output.append("Root name: ")
+                .append(RED)
+                .append(this.header)
+                .append(RESET)
+                .append("\n");
+        return output.toString();
     }
 
 }

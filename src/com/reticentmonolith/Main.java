@@ -15,7 +15,7 @@ public class Main {
             System.err.println("Cannot find " + file.toString());
         }
 
-        System.out.println(result.getHeader());
+        System.out.println(result);
 
     }
 }
