@@ -24,6 +24,9 @@ public class XmlParser {
                 "(?<closer></[^>]+>)|" +
                 "<(?<selfclosing>[^?>/]+\s?/>)|"
         );
+
+        // TODO clean up the lines array so that newlines in text are one element
+
         lines.forEach(line -> {
             Matcher tag = HIERARCHY_PATTERN.matcher(line);
             while (tag.find()) {
@@ -49,7 +52,7 @@ public class XmlParser {
     }
     private void addHeaderAndAttributes(String tag, XmlObject obj) {
         Pattern ATTRIBUTE_PATTERN = Pattern.compile(
-                "\s+(?<attribute>[a-zA-Z0-9]+=\"[a-zA-Z0-9]+\")\s?|"
+                "\s?(?<attribute>[a-zA-Z0-9]+=\"[a-zA-Z0-9]+\")\s?|"
         );
         Matcher attributeMatcher = ATTRIBUTE_PATTERN.matcher(tag);
         while (attributeMatcher.find()) {
@@ -65,7 +68,7 @@ public class XmlParser {
     }
     private void setText(String line, XmlObject obj) {
         Matcher textMatcher = Pattern.compile(
-                "<(?<header>[^?>/]+)\s?.?>(?<text>[^<]+)<"
+                "<(?<header>[^?>/]+)\s?.?>(?<text>[^<]+.?)<", Pattern.DOTALL
         ).matcher(line);
         while (textMatcher.find()) {
             String text = textMatcher.group("text");

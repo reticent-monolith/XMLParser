@@ -7,7 +7,7 @@ public class XmlObject {
     private String header;
     private HashMap<String, String> attributes = new HashMap<>();
     private ArrayList<XmlObject> children = new ArrayList<>();
-    private String text = "";
+    private String text = "No Text";
 
     /* Getters and setters */
     public void setHeader(String header) {
@@ -20,6 +20,9 @@ public class XmlObject {
 
     public void setText(String text) {
         this.text = text;
+    }
+    public String getText() {
+        return this.text;
     }
 
     public void addChild(XmlObject child) {
@@ -34,25 +37,10 @@ public class XmlObject {
         attributes.put(key, value);
     }
 
-    public String getAttribute(String key) {
-        return attributes.get(key);
+    public HashMap<String, String> getAttributes() {
+        return attributes;
     }
-
-    @Override
-    public String toString() {
-        ;
-        StringBuffer output = new StringBuffer();
-        AtomicInteger tabs = new AtomicInteger();
-        output  .append("Header: ")
-                .append(Main.RED) // TODO put these colors somewhere or remove
-                .append(this.header)
-                .append(Main.RESET)
-                .append("\n")
-        ;
-        this.children.forEach(child -> {
-            output.append(child.toString());
-        });
-        return output.toString();
+    public ArrayList<XmlObject> getChildren() {
+        return children;
     }
-
 }
