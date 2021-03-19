@@ -1,1 +1,13 @@
-<?xml version="1.0"?><root><parent><child text="yes">Some text</child><child text="no"/></parent><parent><child><subchild/></child><child /></parent></root>
+<root><parent>
+        <child text="yes">
+            Some text
+        </child>
+        <child text="no"/>
+    </parent>
+    <parent>
+        <child>
+            <subchild/>
+        </child>
+        <child />
+    </parent>
+</root>

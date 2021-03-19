@@ -13,8 +13,8 @@ public class Main {
         } catch (FileNotFoundException err) {
             System.err.println("Cannot find " + file.toString());
         }
-        XmlPresenter presenter = new XmlPresenter(result);
-        presenter.display();
+//        XmlPresenter presenter = new XmlPresenter(result);
+//        presenter.display();
 
     }
 }
