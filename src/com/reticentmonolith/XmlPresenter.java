@@ -19,26 +19,23 @@ public class XmlPresenter {
         output.append(generateHeader(depth, object.getHeader())).append("\n");
         object.getAttributes().forEach((key, value) -> output.append(generateAttribute(depth, key,
                 value)).append("\n"));
-        output.append(generateText(depth, object.getText())).append("\n");
-        object.getChildren().forEach(child -> {
-            build(output, depth+1, child);
-        });
+        if (!object.getText().equals("")) {
+            output.append(generateText(depth, object.getText())).append("\n");
+        }
+        output.append("\n");
+        object.getChildren().forEach(child -> build(output, depth+1, child));
     }
 
     private String generateHeader(int depth, String text) {
-        return "+" +
-                "-------".repeat(depth) +
-                '[' +
+        return  "\t\t".repeat(depth) +
                 "\u001b[31m" +
-                text.toUpperCase() +
-                "\u001b[0m" +
-                "]";
+                text +
+                "\u001b[0m";
     }
 
     private String generateAttribute(int depth, String key, String value) {
-        return "|" +
-                "\t\t".repeat(depth) +
-                "|" +
+        return  "\t\t".repeat(depth) +
+                "" +
                 "\u001b[33m" +
                 key +
                 "\u001b[0m" +
@@ -49,9 +46,8 @@ public class XmlPresenter {
     }
 
     private String generateText(int depth, String text) {
-        return "|" +
-                "\t\t".repeat(depth) +
-                "|" +
+        return  "\t\t".repeat(depth) +
+                "" +
                 (text.equals("No Text") ? "\u001b[37m" : "\u001b[36m") +
                 text +
                 "\u001b[0m";

@@ -6,7 +6,7 @@ public class XmlObject {
     private String header;
     private final HashMap<String, String> attributes = new HashMap<>();
     private final ArrayList<XmlObject> children = new ArrayList<>();
-    private String text = "No Text";
+    private String text = "";
 
     /* Getters and setters */
     public void setHeader(String header) {
