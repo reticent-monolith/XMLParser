@@ -1,12 +1,11 @@
 package com.reticentmonolith;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class XmlObject {
     private String header;
-    private HashMap<String, String> attributes = new HashMap<>();
-    private ArrayList<XmlObject> children = new ArrayList<>();
+    private final HashMap<String, String> attributes = new HashMap<>();
+    private final ArrayList<XmlObject> children = new ArrayList<>();
     private String text = "No Text";
 
     /* Getters and setters */

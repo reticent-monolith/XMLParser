@@ -1,87 +1,59 @@
 package com.reticentmonolith;
 
-import java.util.HashMap;
-
 public class XmlPresenter {
     XmlObject object;
-    private HashMap<String, String> COLOR = new HashMap<>();
-    int depth = 0;
 
     XmlPresenter(XmlObject object) {
         this.object = object;
     }
 
     public void display() {
+        // presentation string
         StringBuilder output = new StringBuilder();
-        output.append(generateHeader(0, object.getHeader())).append("\n");
-        object.getAttributes().forEach((key, value) -> {
-            output.append(generateAttribute(0, key, value)).append("\n");
-        });
-        output.append(generateText(0, object.getText())).append("\n");
-        object.getChildren().forEach(child -> {
-            output.append(generateHeader(1, child.getHeader())).append("\n");
-            child.getAttributes().forEach((key, value) -> {
-                output.append(generateAttribute(1, key, value)).append("\n");
-            });
-            output.append(generateText(1, child.getText())).append("\n");
-            child.getChildren().forEach(subchild -> {
-                output.append(generateHeader(2, subchild.getHeader())).append("\n");
-                subchild.getAttributes().forEach((key, value) -> {
-                    output.append(generateAttribute(2, key, value)).append("\n");
-                });
-                output.append(generateText(2, subchild.getText())).append("\n");
-                subchild.getChildren().forEach(subsubchild -> {
-                    output.append(generateHeader(3, subsubchild.getHeader())).append("\n");
-                    subsubchild.getAttributes().forEach((key, value) -> {
-                        output.append(generateAttribute(3, key, value)).append("\n");
-                    });
-                    output.append(generateText(3, subsubchild.getText())).append("\n");
-                });
-            });
-        });
-
+        // recursively go through children and build presentation string
+        build(output, 0, object);
+        // print out the display
         System.out.println(output.toString());
+    }
+    private void build(StringBuilder output, int depth, XmlObject object) {
+        output.append(generateHeader(depth, object.getHeader())).append("\n");
+        object.getAttributes().forEach((key, value) -> output.append(generateAttribute(depth, key,
+                value)).append("\n"));
+        output.append(generateText(depth, object.getText())).append("\n");
+        object.getChildren().forEach(child -> {
+            build(output, depth+1, child);
+        });
     }
 
     private String generateHeader(int depth, String text) {
-        StringBuilder output = new StringBuilder();
-        output
-                .append("+")
-                .append("-------".repeat(depth))
-                .append('[')
-                .append("\u001b[31m")
-                .append(text.toUpperCase())
-                .append("\u001b[0m")
-                .append("]")
-        ;
-        return output.toString();
+        return "+" +
+                "-------".repeat(depth) +
+                '[' +
+                "\u001b[31m" +
+                text.toUpperCase() +
+                "\u001b[0m" +
+                "]";
     }
 
     private String generateAttribute(int depth, String key, String value) {
-        StringBuilder output = new StringBuilder();
-        output  .append("|")
-                .append("\t\t".repeat(depth))
-                .append("|")
-                .append("\u001b[33m")
-                .append(key)
-                .append("\u001b[0m")
-                .append(": ")
-                .append("\u001b[32m")
-                .append(value)
-                .append("\u001b[0m")
-        ;
-        return output.toString();
+        return "|" +
+                "\t\t".repeat(depth) +
+                "|" +
+                "\u001b[33m" +
+                key +
+                "\u001b[0m" +
+                ": " +
+                "\u001b[32m" +
+                value +
+                "\u001b[0m";
     }
 
     private String generateText(int depth, String text) {
-        StringBuilder output = new StringBuilder();
-        output  .append("|")
-                .append("\t\t".repeat(depth))
-                .append("|")
-                .append(text.equals("No Text")? "\u001b[37m" : "\u001b[36m")
-                .append(text)
-                .append("\u001b[0m")
-        ;
-        return output.toString();
+        return "|" +
+                "\t\t".repeat(depth) +
+                "|" +
+                (text.equals("No Text") ? "\u001b[37m" : "\u001b[36m") +
+                text +
+                "\u001b[0m";
     }
 }
