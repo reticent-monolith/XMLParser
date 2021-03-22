@@ -94,7 +94,7 @@ public class XmlParser {
     }
     private void addHeaderAndAttributes(String tag, XmlObject obj) {
         Pattern ATTRIBUTE_PATTERN = Pattern.compile(
-                "\s?(?<attribute>[\\p{L}0-9_]+=\"[\\p{L}0-9._\\s]+\")\s?|"
+                "\s?(?<attribute>[\\p{L}0-9_]+\\s?=\\s?\"[\\p{L}0-9._\\s]+\")\s?|"
         );
         Matcher attributeMatcher = ATTRIBUTE_PATTERN.matcher(tag);
         while (attributeMatcher.find()) {
