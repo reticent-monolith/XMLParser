@@ -2,9 +2,7 @@ package com.reticentmonolith;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.Stack;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,26 +54,96 @@ public class XmlParser {
     }
 
     public XmlObject parse(File file) throws FileNotFoundException {
-        // Add xml from xml file to array
+        var scrapedString = scrapeFromXml(file);
+        var strings = cleanStrings(scrapedString);
+        var tokens = tokenise(strings);
+        // TODO create exception for this
+        if (!validate(tokens)) System.err.println("Openers != Closers");
+        process(tokens);
+        return processing.pop();
+    }
+    private String scrapeFromXml(File file) throws FileNotFoundException {
         Scanner input = new Scanner(file);
-        ArrayList<String> xmlArray = new ArrayList<String>();
+        input.useDelimiter("");
+        StringBuilder xmlString = new StringBuilder();
+        ArrayList<String> notAllowed = new ArrayList<>(Arrays.asList("\n", "\r", "\t"));
         while (input.hasNext()) {
-            xmlArray.add(
-                    input.nextLine()
-                        .replace(" ", "")
-                        .replace("\n", ""));
+            String ch = input.next();
+            if (notAllowed.contains(ch)) {
+                String next = input.next();
+                while (!notAllowed.contains(next)) {
+                    next = input.next();
+                }
+                xmlString.append(" ");
+            }
+            else if (ch.equals(" ")) {
+                String next = input.next();
+                if (!next.equals(" ")) xmlString.append(" ").append(next);
+            }
+            else xmlString.append(ch);
         }
         input.close();
-        StringBuilder xmlString = new StringBuilder();
-        xmlArray.forEach(x -> {
-            xmlString.append(x);
+
+        return xmlString.toString();
+    }
+    private ArrayList<String> cleanStrings(String inputString) {
+        Scanner string = new Scanner(inputString);
+        string.useDelimiter(">");
+        ArrayList<String> tokens = new ArrayList<>();
+        while (string.hasNext()) {
+            String token = string.next() + ">";
+            token = token.trim();
+            if (token.charAt(0) != '<' && token.contains("<")) {
+                String[] split = token.split("<");
+                split[0] = split[0].trim();
+                split[1] = "<" + split[1];
+                tokens.addAll(Arrays.asList(split));
+            } else tokens.add(token);
+        }
+        return tokens;
+    }
+    private ArrayList<XmlElement> tokenise(ArrayList<String> array) {
+        ArrayList<XmlElement> tokens = new ArrayList<>();
+        array.forEach(string -> {
+            XmlElement token = new XmlElement(string);
+            tokens.add(token);
         });
 
-        System.out.println(xmlString);
-
-        return new XmlObject();
+        return tokens;
     }
+    private boolean validate(ArrayList<XmlElement> tokens) {
+        // check for equals numbers of closers and openers
+        int openers = (int) tokens.stream().filter(token -> token.type().equals(TYPES.Opener)).count();
+        int closers =
+                (int) tokens.stream().filter(token -> token.type().equals(TYPES.Closer)).count();
+        return openers == closers;
 
+    }
+    private void process(ArrayList<XmlElement> tokens) {
+        tokens.forEach(token -> {
+            switch (token.type()) {
+                case Opener -> {
+                    XmlObject obj = new XmlObject();
+                    addHeaderAndAttributes(token.getContent(), obj);
+                    processing.push(obj);
+                }
+                case Closer -> {
+                    if (processing.size() > 1) {
+                        XmlObject closed = processing.pop();
+                        processing.peek().addChild(closed);
+                    }
+                }
+                case Single -> {
+                    XmlObject obj = new XmlObject();
+                    addHeaderAndAttributes(token.getContent(), obj);
+                    processing.peek().addChild(obj);
+                }
+                case Text -> {
+                    processing.peek().addText(token.getContent());
+                }
+            }
+        });
+    }
     private void addHeaderAndAttributes(String tag, XmlObject obj) {
         Pattern ATTRIBUTE_PATTERN = Pattern.compile(
                 "\s?(?<attribute>[\\p{L}0-9_]+=\"[\\p{L}0-9._\\s]+\")\s?|"

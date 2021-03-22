@@ -1,13 +1,13 @@
 <root><parent>
         <child text="yes">
-            Some text
+            Some
+            text
         </child>
         <child text="no"/>
     </parent>
     <parent>
         <child>
-            <subchild/>
-        </child>
+            <subchild/></child>
         <child />
     </parent>
 </root>
