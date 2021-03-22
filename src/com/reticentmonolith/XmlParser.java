@@ -2,57 +2,99 @@ package com.reticentmonolith;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Scanner;
-import java.util.Stack;
-import java.util.regex.Pattern;
+import java.util.*;
 import java.util.regex.Matcher;
-import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 public class XmlParser {
     Stack<XmlObject> processing = new Stack<>();
+
+    /* Main parsing operation */
     public XmlObject parse(File file) throws FileNotFoundException {
-        // Add lines from xml file to array
+        var scrapedString = scrapeFromXml(file);
+        var strings = cleanStrings(scrapedString);
+        var tokens = tokenise(strings);
+        // TODO create exception for this
+        // TODO improve validation
+        if (!validate(tokens)) System.err.println("Openers != Closers");
+        process(tokens);
+        return processing.pop();
+    }
+
+    /*--------------------------------- Private Methods -------------------------------------*/
+    private String scrapeFromXml(File file) throws FileNotFoundException {
         Scanner input = new Scanner(file);
-        ArrayList<String> lines = new ArrayList<>();
-        while (input.hasNext()) {
-            lines.add(input.nextLine());
+        input.useDelimiter("");
+        StringBuilder xmlString = new StringBuilder();
+        ArrayList<String> notAllowed = new ArrayList<>(Arrays.asList("\n", "\r", "\t"));
+        while (input.hasNext()) {xmlString.append(input.next());}
+        input.close();
+        return xmlString.toString().replaceAll("[\\n\\t\\r]", "").replaceAll("[\\s]{2,}", " ");
+    }
+    private ArrayList<String> cleanStrings(String inputString) {
+        Scanner string = new Scanner(inputString);
+        string.useDelimiter(">");
+        ArrayList<String> tokens = new ArrayList<>();
+        while (string.hasNext()) {
+            String token = string.next() + ">";
+            token = token.trim();
+            if (token.charAt(0) != '<' && token.contains("<")) {
+                String[] split = token.split("<");
+                split[0] = split[0].trim();
+                split[1] = "<" + split[1];
+                tokens.addAll(Arrays.asList(split));
+            } else tokens.add(token);
         }
+        return tokens;
+    }
+    private ArrayList<XmlElement> tokenise(ArrayList<String> array) {
+        ArrayList<XmlElement> tokens = new ArrayList<>();
+        array.forEach(string -> {
+            XmlElement token = new XmlElement(string);
+            tokens.add(token);
+        });
 
-        // find tags and create hierarchy
-        Pattern HIERARCHY_PATTERN = Pattern.compile(
-                "<(?<opener>[^?>/]+)>|" +
-                "(?<closer></[^>]+>)|" +
-                "<(?<selfclosing>[^?>/]+\s?/>)|"
-        );
+        return tokens;
+    }
+    private boolean validate(ArrayList<XmlElement> tokens) {
+        // check for equals numbers of closers and openers
+        int openers = (int) tokens.stream().filter(token -> token.type().equals(TYPES.Opener)).count();
+        int closers =
+                (int) tokens.stream().filter(token -> token.type().equals(TYPES.Closer)).count();
+        return openers == closers;
 
-        // TODO clean up the lines array so that newlines in text are one element
-
-        lines.forEach(line -> {
-            Matcher tag = HIERARCHY_PATTERN.matcher(line);
-            while (tag.find()) {
-                XmlObject obj = new XmlObject();
-                String opener = tag.group("opener");
-                String closer = tag.group("closer");
-                String selfCloser = tag.group("selfclosing");
-
-                if (opener != null) {
-                    addHeaderAndAttributes(opener, obj);
-                    setText(line, obj);
+    }
+    private void process(ArrayList<XmlElement> tokens) {
+        tokens.forEach(token -> {
+            switch (token.type()) {
+                case Opener -> {
+                    XmlObject obj = new XmlObject();
+                    addHeaderAndAttributes(token.getContent(), obj);
                     processing.push(obj);
-                } else if (selfCloser != null) {
-                    addHeaderAndAttributes(selfCloser, obj);
+                }
+                case Closer -> {
+                    if (processing.size() > 1) {
+                        XmlObject closed = processing.pop();
+                        processing.peek().addChild(closed);
+                    }
+                }
+                case Single -> {
+                    XmlObject obj = new XmlObject();
+                    addHeaderAndAttributes(token.getContent(), obj);
                     processing.peek().addChild(obj);
-                } else if (closer != null && processing.size() > 1) {
-                    XmlObject closed = processing.pop();
-                    processing.peek().addChild(closed);
+                }
+                case Text -> {
+                    processing.peek().addText(token.getContent());
+                }
+                case Malformed -> {
+                    System.err.println("Malformed token: " + token.getContent());
                 }
             }
         });
-        return processing.pop();
     }
     private void addHeaderAndAttributes(String tag, XmlObject obj) {
         Pattern ATTRIBUTE_PATTERN = Pattern.compile(
-                "\s?(?<attribute>[a-zA-Z0-9]+=\"[a-zA-Z0-9]+\")\s?|"
+                "\s?(?<attribute>[\\p{L}0-9_]+\\s?=\\s?\"[\\p{L}0-9._\\s]+\")\s?|"
         );
         Matcher attributeMatcher = ATTRIBUTE_PATTERN.matcher(tag);
         while (attributeMatcher.find()) {
@@ -61,20 +103,16 @@ public class XmlParser {
                 obj.addAttribute(attribute);
             }
         }
-        StringBuilder headerBuilder = new StringBuilder(tag);
-        int spaceIndex = tag.indexOf(" ");
-        if (spaceIndex < 0) spaceIndex = tag.length();
-        obj.setHeader(headerBuilder.substring(0, spaceIndex));
-    }
-    private void setText(String line, XmlObject obj) {
-        Matcher textMatcher = Pattern.compile(
-                "<(?<header>[^?>/]+)\s?.?>(?<text>[^<]+.?)<", Pattern.DOTALL
-        ).matcher(line);
-        while (textMatcher.find()) {
-            String text = textMatcher.group("text");
-            if (text != null) {
-                obj.setText(text);
-            }
+        if (tag.contains(" ")) {
+            int spaceIndex = tag.indexOf(" ");
+            if (spaceIndex < 0) spaceIndex = tag.length();
+            obj.setHeader(tag.substring(1, spaceIndex));
+        } else if (tag.contains("/")) {
+            int slashIndex = tag.indexOf("/");
+            if (slashIndex < 0) slashIndex = tag.length();
+            obj.setHeader(tag.substring(0, slashIndex));
+        } else {
+            obj.setHeader(tag.substring(1, tag.length()-1));
         }
     }
 }

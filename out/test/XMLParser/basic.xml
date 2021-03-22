@@ -1,1 +1,0 @@
-<?xml version="1.0"?><root name="jones"><parent name="anon"><child name="unknown"/></parent><parent name="helen"><child name="ben" age="31"><subchild name="daisy" derp="jsdf" dsdfg="sdfgsdfgsdfg">I am a small child</subchild></child><child name="aaron"/></parent></root>

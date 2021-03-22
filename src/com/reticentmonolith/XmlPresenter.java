@@ -1,5 +1,7 @@
 package com.reticentmonolith;
 
+import java.util.ArrayList;
+
 public class XmlPresenter {
     XmlObject object;
 
@@ -19,26 +21,22 @@ public class XmlPresenter {
         output.append(generateHeader(depth, object.getHeader())).append("\n");
         object.getAttributes().forEach((key, value) -> output.append(generateAttribute(depth, key,
                 value)).append("\n"));
-        output.append(generateText(depth, object.getText())).append("\n");
-        object.getChildren().forEach(child -> {
-            build(output, depth+1, child);
-        });
+        if (object.getText().size() > 0) {
+            output.append(generateText(depth, object.getText()));
+        }
+        object.getChildren().forEach(child -> build(output, depth+1, child));
     }
 
     private String generateHeader(int depth, String text) {
-        return "+" +
-                "-------".repeat(depth) +
-                '[' +
+        return  "\t\t".repeat(depth) +
                 "\u001b[31m" +
-                text.toUpperCase() +
-                "\u001b[0m" +
-                "]";
+                text +
+                "\u001b[0m";
     }
 
     private String generateAttribute(int depth, String key, String value) {
-        return "|" +
-                "\t\t".repeat(depth) +
-                "|" +
+        return  "\t\t".repeat(depth) +
+                "" +
                 "\u001b[33m" +
                 key +
                 "\u001b[0m" +
@@ -48,12 +46,12 @@ public class XmlPresenter {
                 "\u001b[0m";
     }
 
-    private String generateText(int depth, String text) {
-        return "|" +
-                "\t\t".repeat(depth) +
-                "|" +
-                (text.equals("No Text") ? "\u001b[37m" : "\u001b[36m") +
-                text +
-                "\u001b[0m";
+    private String generateText(int depth, ArrayList<String> text) {
+        StringBuilder output = new StringBuilder();
+        text.forEach(t -> output.append("\t\t".repeat(depth))
+                .append("\u001b[36m")
+                .append(t)
+                .append("\u001b[0m"));
+        return  output.toString();
     }
 }
