@@ -15,6 +15,7 @@ public class XmlElement {
         if (opener.find()) this.type = TYPES.Opener;
         else if (closer.find()) this.type = TYPES.Closer;
         else if (single.find()) this.type = TYPES.Single;
+        else if (input.contains("<?") && input.contains("?>")) this.type = TYPES.Meta;
         else if (!(input.contains("<") || input.contains(">"))) this.type = TYPES.Text;
         else this.type = TYPES.Malformed;
         this.content = input;

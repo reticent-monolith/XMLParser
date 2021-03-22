@@ -28,14 +28,14 @@ public class XmlPresenter {
     }
 
     private String generateHeader(int depth, String text) {
-        return  "\t\t".repeat(depth) +
+        return  "\t\t|".repeat(depth) +
                 "\u001b[31m" +
                 text +
                 "\u001b[0m";
     }
 
     private String generateAttribute(int depth, String key, String value) {
-        return  "\t\t".repeat(depth) +
+        return  "\t\t|".repeat(depth) +
                 "" +
                 "\u001b[33m" +
                 key +
@@ -48,7 +48,7 @@ public class XmlPresenter {
 
     private String generateText(int depth, ArrayList<String> text) {
         StringBuilder output = new StringBuilder();
-        text.forEach(t -> output.append("\t\t".repeat(depth))
+        text.forEach(t -> output.append("\t\t|".repeat(depth))
                 .append("\u001b[36m")
                 .append(t)
                 .append("\u001b[0m"));

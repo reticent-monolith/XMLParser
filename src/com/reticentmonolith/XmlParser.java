@@ -10,13 +10,13 @@ public class XmlParser {
     Stack<XmlObject> processing = new Stack<>();
 
     /* Main parsing operation */
-    public XmlObject parse(File file) throws FileNotFoundException {
+    public XmlObject parse(File file) throws FileNotFoundException, MalformedTokenException {
         var scrapedString = scrapeFromXml(file);
         var strings = cleanStrings(scrapedString);
         var tokens = tokenise(strings);
         // TODO create exception for this
         // TODO improve validation
-        if (!validate(tokens)) System.err.println("Openers != Closers");
+        validate(tokens);
         process(tokens);
         return processing.pop();
     }
@@ -56,39 +56,38 @@ public class XmlParser {
 
         return tokens;
     }
-    private boolean validate(ArrayList<XmlElement> tokens) {
-        // check for equals numbers of closers and openers
-        int openers = (int) tokens.stream().filter(token -> token.type().equals(TYPES.Opener)).count();
-        int closers =
-                (int) tokens.stream().filter(token -> token.type().equals(TYPES.Closer)).count();
-        return openers == closers;
-
+    private void validate(ArrayList<XmlElement> tokens) throws MalformedTokenException {
+        // check for malformed tokens
+        for (var token : tokens) {
+            if (token.type().equals(TYPES.Malformed)) throw new MalformedTokenException(token.getContent());
+        }
     }
+
     private void process(ArrayList<XmlElement> tokens) {
         tokens.forEach(token -> {
             switch (token.type()) {
                 case Opener -> {
+                    // Create a new XmlObject with header and attributes and push to stack
                     XmlObject obj = new XmlObject();
                     addHeaderAndAttributes(token.getContent(), obj);
                     processing.push(obj);
                 }
                 case Closer -> {
+                    // Add this object as a child to the next object on the stack
+                    // The very last closer should close the root, which should return
                     if (processing.size() > 1) {
                         XmlObject closed = processing.pop();
                         processing.peek().addChild(closed);
                     }
                 }
+                // Create a new object and then add as a child to the next object on the stack
                 case Single -> {
                     XmlObject obj = new XmlObject();
                     addHeaderAndAttributes(token.getContent(), obj);
                     processing.peek().addChild(obj);
                 }
-                case Text -> {
-                    processing.peek().addText(token.getContent());
-                }
-                case Malformed -> {
-                    System.err.println("Malformed token: " + token.getContent());
-                }
+                // Add as text to object on top of stack
+                case Text -> processing.peek().addText(token.getContent());
             }
         });
     }

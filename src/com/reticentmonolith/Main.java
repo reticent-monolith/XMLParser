@@ -10,11 +10,14 @@ public class Main {
         XmlObject result = new XmlObject();
         try {
             result = parser.parse(file);
+            XmlPresenter presenter = new XmlPresenter(result);
+            presenter.display();
         } catch (FileNotFoundException err) {
             System.err.println("Cannot find " + file.toString());
+        } catch (MalformedTokenException err) {
+            System.err.println("Malformed token found (" + err + "), exiting...");
         }
-        XmlPresenter presenter = new XmlPresenter(result);
-        presenter.display();
+
 
     }
 }
