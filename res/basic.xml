@@ -7,7 +7,7 @@
     </parent>
     <parent>
         <child>
-            <subchild/></child>
+            <subchild /></child>
         <child />
     </parent>
 </root>

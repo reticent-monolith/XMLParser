@@ -9,82 +9,27 @@ import java.util.regex.Pattern;
 public class XmlParser {
     Stack<XmlObject> processing = new Stack<>();
 
-    // Patterns
-    private final Pattern OPENING_TAG = Pattern.compile("<[^?>/]+");
-    private Pattern CLOSING_TAG = Pattern.compile("(?<closer>/[^>]+>)");
-    private Pattern SINGLE_TAG = Pattern.compile("<(?<single>[^?>/]+\s?/>)");
-    private Pattern ATTRIBUTE_PATTERN = Pattern.compile("\s?(?<attribute>[\\p{L}0-9_]+=\"[\\p{L}0-9._\\s]+\")\s?");
-
-    public XmlObject parseOld(File file) throws FileNotFoundException {
-        // Add xml from xml file to array
-        Scanner input = new Scanner(file);
-        StringBuilder xmlBuilder = new StringBuilder();
-        while (input.hasNext()) {xmlBuilder.append(input.nextLine());}
-        String xml = xmlBuilder.toString();
-        // find tags and create hierarchy
-        // TODO get swedish characters too
-        // TODO get text before children too
-        Pattern HIERARCHY_PATTERN = Pattern.compile(
-                "<(?<opener>[^?>/]+)>|" +
-                "(?<endText>[^>]*)<(?<closer>/[^>]+>)|" +
-                "<(?<selfclosing>[^?>/]+\s?/>)|"
-        );
-        Matcher tag = HIERARCHY_PATTERN.matcher(xml);
-        while (tag.find()) {
-            XmlObject obj = new XmlObject();
-            String opener = tag.group("opener");
-            String endText = tag.group("endText");
-            String closer = tag.group("closer");
-            String selfCloser = tag.group("selfclosing");
-            if (opener != null) {
-                addHeaderAndAttributes(opener, obj);
-                processing.push(obj);
-            } else if (selfCloser != null) {
-                addHeaderAndAttributes(selfCloser, obj);
-                processing.peek().addChild(obj);
-            } else if (closer != null && processing.size() > 1) {
-                XmlObject closed = processing.pop();
-                if (endText != null && !endText.isBlank()) {
-                    closed.addText(endText);
-                }
-                processing.peek().addChild(closed);
-            }
-        }
-        return processing.pop();
-    }
-
+    /* Main parsing operation */
     public XmlObject parse(File file) throws FileNotFoundException {
         var scrapedString = scrapeFromXml(file);
         var strings = cleanStrings(scrapedString);
         var tokens = tokenise(strings);
         // TODO create exception for this
+        // TODO improve validation
         if (!validate(tokens)) System.err.println("Openers != Closers");
         process(tokens);
         return processing.pop();
     }
+
+    /*--------------------------------- Private Methods -------------------------------------*/
     private String scrapeFromXml(File file) throws FileNotFoundException {
         Scanner input = new Scanner(file);
         input.useDelimiter("");
         StringBuilder xmlString = new StringBuilder();
         ArrayList<String> notAllowed = new ArrayList<>(Arrays.asList("\n", "\r", "\t"));
-        while (input.hasNext()) {
-            String ch = input.next();
-            if (notAllowed.contains(ch)) {
-                String next = input.next();
-                while (!notAllowed.contains(next)) {
-                    next = input.next();
-                }
-                xmlString.append(" ");
-            }
-            else if (ch.equals(" ")) {
-                String next = input.next();
-                if (!next.equals(" ")) xmlString.append(" ").append(next);
-            }
-            else xmlString.append(ch);
-        }
+        while (input.hasNext()) {xmlString.append(input.next());}
         input.close();
-
-        return xmlString.toString();
+        return xmlString.toString().replaceAll("[\\n\\t\\r]", "").replaceAll("[\\s]{2,}", " ");
     }
     private ArrayList<String> cleanStrings(String inputString) {
         Scanner string = new Scanner(inputString);
@@ -141,6 +86,9 @@ public class XmlParser {
                 case Text -> {
                     processing.peek().addText(token.getContent());
                 }
+                case Malformed -> {
+                    System.err.println("Malformed token: " + token.getContent());
+                }
             }
         });
     }
@@ -158,13 +106,13 @@ public class XmlParser {
         if (tag.contains(" ")) {
             int spaceIndex = tag.indexOf(" ");
             if (spaceIndex < 0) spaceIndex = tag.length();
-            obj.setHeader(tag.substring(0, spaceIndex));
+            obj.setHeader(tag.substring(1, spaceIndex));
         } else if (tag.contains("/")) {
             int slashIndex = tag.indexOf("/");
             if (slashIndex < 0) slashIndex = tag.length();
             obj.setHeader(tag.substring(0, slashIndex));
         } else {
-            obj.setHeader(tag);
+            obj.setHeader(tag.substring(1, tag.length()-1));
         }
     }
 }

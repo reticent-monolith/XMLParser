@@ -18,7 +18,7 @@ public class XmlObject {
     }
 
     public void addText(String text) {
-        this.text.add(text);
+        this.text.add(text + "\n");
     }
     public ArrayList<String> getText() {
         return this.text;

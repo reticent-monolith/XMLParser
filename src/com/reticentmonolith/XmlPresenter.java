@@ -22,9 +22,8 @@ public class XmlPresenter {
         object.getAttributes().forEach((key, value) -> output.append(generateAttribute(depth, key,
                 value)).append("\n"));
         if (object.getText().size() > 0) {
-            output.append(generateText(depth, object.getText())).append("\n");
+            output.append(generateText(depth, object.getText()));
         }
-        output.append("\n");
         object.getChildren().forEach(child -> build(output, depth+1, child));
     }
 
