@@ -15,7 +15,9 @@ public class Main {
         } catch (FileNotFoundException err) {
             System.err.println("Cannot find " + file.toString());
         } catch (MalformedTokenException err) {
-            System.err.println("Malformed token found (" + err + "), exiting...");
+            System.err.println("Malformed token found (" + err.token + "), exiting...");
+        } catch (UnbalancedHierarchyException err) {
+            System.err.println("Hierarchy unbalanced, check XML file.");
         }
 
 

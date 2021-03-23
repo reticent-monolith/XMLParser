@@ -10,7 +10,7 @@ public class XmlParser {
     Stack<XmlObject> processing = new Stack<>();
 
     /* Main parsing operation */
-    public XmlObject parse(File file) throws FileNotFoundException, MalformedTokenException {
+    public XmlObject parse(File file) throws FileNotFoundException, MalformedTokenException, UnbalancedHierarchyException {
         var scrapedString = scrapeFromXml(file);
         var strings = cleanStrings(scrapedString);
         var tokens = tokenise(strings);
@@ -26,7 +26,6 @@ public class XmlParser {
         Scanner input = new Scanner(file);
         input.useDelimiter("");
         StringBuilder xmlString = new StringBuilder();
-        ArrayList<String> notAllowed = new ArrayList<>(Arrays.asList("\n", "\r", "\t"));
         while (input.hasNext()) {xmlString.append(input.next());}
         input.close();
         return xmlString.toString().replaceAll("[\\n\\t\\r]", "").replaceAll("[\\s]{2,}", " ");
@@ -56,13 +55,15 @@ public class XmlParser {
 
         return tokens;
     }
-    private void validate(ArrayList<XmlElement> tokens) throws MalformedTokenException {
+    private void validate(ArrayList<XmlElement> tokens) throws MalformedTokenException, UnbalancedHierarchyException {
         // check for malformed tokens
         for (var token : tokens) {
             if (token.type().equals(TYPES.Malformed)) throw new MalformedTokenException(token.getContent());
         }
+        long openers = tokens.stream().filter(token -> token.type().equals(TYPES.Opener)).count();
+        long closers = tokens.stream().filter(token -> token.type().equals(TYPES.Closer)).count();
+        if (closers != openers) throw new UnbalancedHierarchyException();
     }
-
     private void process(ArrayList<XmlElement> tokens) {
         tokens.forEach(token -> {
             switch (token.type()) {
@@ -93,7 +94,7 @@ public class XmlParser {
     }
     private void addHeaderAndAttributes(String tag, XmlObject obj) {
         Pattern ATTRIBUTE_PATTERN = Pattern.compile(
-                "\s?(?<attribute>[\\p{L}0-9_]+\\s?=\\s?\"[\\p{L}0-9._\\s]+\")\s?|"
+                "\s?(?<attribute>[\\p{L}0-9_-]+\\s?=\\s?\"[\\p{L}0-9._\\s-]+\")\s?|"
         );
         Matcher attributeMatcher = ATTRIBUTE_PATTERN.matcher(tag);
         while (attributeMatcher.find()) {
